@@ -9,8 +9,14 @@ if (isset($_SESSION["login"]) && $_SESSION["login"] === true) {
 
 $error = "";
 
+if (isset($_COOKIE["remember_email"])){
+    $simpanEmail = $_COOKIE["remember_email"];
+} else {
+    $simpanEmail = "";
+}
+
 if (isset($_POST["login"])) {
-    $email = mysqli_real_escape_string($connection, trim($_POST["email"]));
+    $email = $_POST["email"];
     $password = $_POST["password"];
 
     $query = mysqli_query($connection, "SELECT * FROM users WHERE email = '$email'");
@@ -25,7 +31,13 @@ if (isset($_POST["login"])) {
             $_SESSION["username"] = $user["nama"];
             $_SESSION["role"] = $user["role"];
 
-            //Dashboard yang akan di pilih
+            // Remember Me (Cookie 7 hari)
+            if (isset($_POST["remember"])) {
+                setcookie("remember_email", $email, time() + (86400 * 7), "/");
+            } else {
+                setcookie("remember_email", "", time() - 3600, "/");
+            }
+
             if ($user["role"] === "manager") {
                 header("Location: manager.php");
             } else {
@@ -44,33 +56,43 @@ if (isset($_POST["login"])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login - SiLembur</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-light">
     <div class="container mt-5" style="max-width: 400px;">
         <div class="card shadow-sm">
             <div class="card-body">
-                <h4 class="text-center mb-1">Login</h4>
-                <p class="text-center text-muted mb-4">aaa</p>
+                <h4 class="text-center mb-1">SiLembur</h4>
+                <p class="text-center text-muted mb-4">Sistem Manajemen Lembur & Jam Kerja</p>
+
                 <?php if ($error != ""): ?>
                     <div class="alert alert-danger">
                         <?= htmlspecialchars($error) ?>
                     </div>
                 <?php endif; ?>
+
                 <form method="POST">
                     <div class="mb-3">
                         <label class="form-label">Email</label>
-                        <input type="email" name="email" class="form-control" required>
+                        <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($simpanEmail) ?>" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Password</label>
                         <input type="password" name="password" class="form-control" required>
                     </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" name="remember" class="form-check-input" id="remember" <?= $simpanEmail != "" ? "checked" : "" ?>>
+                        <label class="form-check-label" for="remember">Ingat Saya</label>
+                    </div>
                     <button type="submit" name="login" class="btn btn-primary w-100">
                         Login
                     </button>
                 </form>
+
+                <p class="text-center mt-3 mb-0 small">
+                    Belum punya akun karyawan? <a href="register.php">Daftar di sini</a>
+                </p>
             </div>
         </div>
     </div>
