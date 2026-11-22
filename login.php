@@ -38,6 +38,7 @@ if (isset($_POST["login"])) {
                 setcookie("remember_email", "", time() - 3600, "/");
             }
 
+            // Dashboard yang digunakan
             if ($user["role"] === "manager") {
                 header("Location: manager.php");
             } else {
