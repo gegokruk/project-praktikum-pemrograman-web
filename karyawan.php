@@ -9,28 +9,22 @@ if (!isset($_SESSION["login"]) || $_SESSION["login"] !== true || $_SESSION["role
 
 $id_user = (int) $_SESSION["id_user"];
 
-$warna_baris = [
-    "tersedia"     => "table-success",
-    "hampir penuh" => "table-warning",
-    "penuh"        => "table-danger"
-];
-$warna_badge = [
-    "tersedia"     => "bg-success",
-    "hampir penuh" => "bg-warning text-dark",
-    "penuh"        => "bg-danger"
-];
-$teks_status = [
-    "tersedia"     => "Tersedia",
-    "hampir penuh" => "Hampir penuh",
-    "penuh"        => "Penuh"
-];
+//Jadwal yang sudah dipilih karyawan
+$pilihan_saya = [];
+$q = mysqli_query($connection, "SELECT id_slot FROM pilihan_lembur 
+    WHERE id_user = $id_user AND status = 'aktif'");
+while ($r = mysqli_fetch_assoc($q)) {
+    $pilihan_saya[] = $r["id_slot"];
+}
 
-// semua jadwal lembur, jumlah karyawan yang memilih, jadwal yang sudah dipilih oleh karyawan
+//Semua jadwal lembur dan jumlah orang yang sudah memilih
 $slots = mysqli_query($connection, "SELECT slot_lembur.*, 
-    (SELECT COUNT(*) FROM pilihan_lembur WHERE pilihan_lembur.id_slot = slot_lembur.id_slot AND pilihan_lembur.status = 'aktif') AS terisi, 
-    (SELECT COUNT(*) FROM pilihan_lembur WHERE pilihan_lembur.id_slot = slot_lembur.id_slot AND pilihan_lembur.id_user = $id_user AND pilihan_lembur.status = 'aktif') AS saya FROM slot_lembur ORDER BY tanggal, jam_mulai");
+    (SELECT COUNT(*) FROM pilihan_lembur 
+     WHERE pilihan_lembur.id_slot = slot_lembur.id_slot AND pilihan_lembur.status = 'aktif') AS terisi 
+    FROM slot_lembur 
+    ORDER BY tanggal, jam_mulai");
 
-// jadwal lembur karyawan
+//Jadwal lembur milik karyawan 
 $jadwal = mysqli_query($connection, "SELECT pilihan_lembur.id_pilihan, slot_lembur.tanggal, slot_lembur.jam_mulai, slot_lembur.jam_selesai 
     FROM pilihan_lembur 
     INNER JOIN slot_lembur ON pilihan_lembur.id_slot = slot_lembur.id_slot 
@@ -88,32 +82,41 @@ $jadwal = mysqli_query($connection, "SELECT pilihan_lembur.id_pilihan, slot_lemb
                         <?php $no = 1; ?>
                         <?php while ($row = mysqli_fetch_assoc($slots)): ?>
                             <?php
-                            $st = status($row["terisi"], $row["kuota"]);
-                            if ($row["status"] === "tutup") {
-                                $kelas_baris = "table-secondary";
-                                $kelas_badge = "bg-secondary";
-                                $label = "Ditutup";
+                            $sudah_dipilih = in_array($row["id_slot"], $pilihan_saya);  
+                            $ditutup = $row["status"] === "tutup";                      
+                            $penuh = $row["terisi"] >= $row["kuota"];                  
+                            
+                            if ($ditutup) {
+                                $warna_baris = "table-secondary";
+                                $warna_badge = "bg-secondary";
+                                $teks_status = "Ditutup";
+                            } elseif (status($row["terisi"], $row["kuota"]) === "penuh") {
+                                $warna_baris = "table-danger";
+                                $warna_badge = "bg-danger";
+                                $teks_status = "Penuh";
+                            } elseif (status($row["terisi"], $row["kuota"]) === "hampir penuh") {
+                                $warna_baris = "table-warning";
+                                $warna_badge = "bg-warning text-dark";
+                                $teks_status = "Hampir penuh";
                             } else {
-                                $kelas_baris = $warna_baris[$st];
-                                $kelas_badge = $warna_badge[$st];
-                                $label = $teks_status[$st];
+                                $warna_baris = "table-success";
+                                $warna_badge = "bg-success";
+                                $teks_status = "Tersedia";
                             }
                             ?>
-                            <tr class="<?= $kelas_baris ?>">
+                            <tr class="<?= $warna_baris ?>">
                                 <td><?= $no++ ?></td>
                                 <td><?= $row["tanggal"] ?></td>
                                 <td><?= substr($row["jam_mulai"], 0, 5) ?> - <?= substr($row["jam_selesai"], 0, 5) ?></td>
                                 <td><?= $row["terisi"] ?> / <?= $row["kuota"] ?></td>
-                                <td><span class="badge <?= $kelas_badge ?>"><?= $label ?></span></td>
+                                <td><span class="badge <?= $warna_badge ?>"><?= $teks_status ?></span></td>
                                 <td>
-                                    <?php if ($row["saya"] > 0): ?>
+                                    <?php if ($sudah_dipilih): ?>
                                         Sudah dipilih
-                                    <?php elseif ($row["status"] === "tutup"): ?>
-                                        -
-                                    <?php elseif ($row["terisi"] >= $row["kuota"]): ?>
+                                    <?php elseif ($ditutup || $penuh): ?>
                                         -
                                     <?php else: ?>
-                                        <form method="POST" action="proses.php" onsubmit="return confirm('Pilih slot lembur ini?')">
+                                        <form method="POST" action="proses_karyawan.php" onsubmit="return confirm('Pilih slot lembur ini?')">
                                             <input type="hidden" name="id_slot" value="<?= $row["id_slot"] ?>">
                                             <button type="submit" name="pilih" class="btn btn-primary btn-sm">Pilih</button>
                                         </form>
@@ -151,7 +154,7 @@ $jadwal = mysqli_query($connection, "SELECT pilihan_lembur.id_pilihan, slot_lemb
                         <td><?= $row["tanggal"] ?></td>
                         <td><?= substr($row["jam_mulai"], 0, 5) ?> - <?= substr($row["jam_selesai"], 0, 5) ?></td>
                         <td>
-                            <form method="POST" action="proses.php" onsubmit="return confirm('Batalkan lembur ini?')">
+                            <form method="POST" action="proses_karyawan.php" onsubmit="return confirm('Batalkan lembur ini?')">
                                 <input type="hidden" name="id_pilihan" value="<?= $row["id_pilihan"] ?>">
                                 <button type="submit" name="batal" class="btn btn-danger btn-sm">Batal</button>
                             </form>
