@@ -1,6 +1,7 @@
 <?php
 session_start();
 require "koneksi.php";
+require "penghubung.php";
 
 if (!isset($_SESSION["login"]) || $_SESSION["login"] !== true || $_SESSION["role"] !== "manager") {
     header("Location: login.php");
@@ -16,29 +17,6 @@ function kembali($jenis, $pesan, $halaman = "manager.php") {
     exit;
 }
 
-// Fungsi bantu untuk memperbarui status slot jadi 'penuh' atau 'buka' otomatis
-function perbaruiStatusSlot($connection, $id_slot) {
-    $q_slot = mysqli_query($connection, "SELECT kuota, status FROM slot_lembur WHERE id_slot = $id_slot");
-    $slot = mysqli_fetch_assoc($q_slot);
-
-    // Kalau ditutup manual oleh manager, biarkan tetap tutup
-    if ($slot["status"] == "tutup") {
-        return;
-    }
-
-    $q_hitung = mysqli_query($connection, "SELECT COUNT(*) AS jumlah FROM pilihan_lembur WHERE id_slot = $id_slot AND status = 'aktif'");
-    $data_hitung = mysqli_fetch_assoc($q_hitung);
-    $terisi = $data_hitung["jumlah"];
-
-    if ($terisi >= $slot["kuota"]) {
-        $status_baru = "penuh";
-    } else {
-        $status_baru = "buka";
-    }
-
-    mysqli_query($connection, "UPDATE slot_lembur SET status = '$status_baru' WHERE id_slot = $id_slot");
-}
-
 // tambah Slot
 if (isset($_POST["tambah_slot"])) {
     $tanggal     = mysqli_real_escape_string($connection, $_POST["tanggal"]);
@@ -51,6 +29,9 @@ if (isset($_POST["tambah_slot"])) {
     }
     if ($kuota < 1) {
         kembali("error", "Kuota karyawan minimal 1 orang");
+    }
+    if ($tanggal < date("Y-m-d")) {
+        kembali("error", "Tanggal tidak boleh sebelum hari ini");
     }
 
     $query = "INSERT INTO slot_lembur (tanggal, jam_mulai, jam_selesai, kuota, status, dibuat_oleh) 
@@ -124,6 +105,23 @@ if (isset($_POST["pindah_karyawan"])) {
     $q_duplikat = mysqli_query($connection, "SELECT id_pilihan FROM pilihan_lembur WHERE id_user = $id_user AND id_slot = $id_slot_tujuan AND status = 'aktif'");
     if (mysqli_num_rows($q_duplikat) > 0) {
         kembali("error", "Karyawan ini sudah terdaftar di slot tujuan", $halaman_balik);
+    }
+
+    // Cek slot tujuan apakah masih ada, tidak ditutup, atau masih ada sisa slot
+    $q_tujuan = mysqli_query($connection, "SELECT kuota, status FROM slot_lembur WHERE id_slot = $id_slot_tujuan");
+    if (mysqli_num_rows($q_tujuan) == 0) {
+        kembali("error", "Slot tujuan tidak ditemukan", $halaman_balik);
+    }
+    $slot_tujuan = mysqli_fetch_assoc($q_tujuan);
+
+    $q_isi = mysqli_query($connection, "SELECT COUNT(*) AS jumlah FROM pilihan_lembur WHERE id_slot = $id_slot_tujuan AND status = 'aktif'");
+    $terisi_tujuan = mysqli_fetch_assoc($q_isi)["jumlah"];
+
+    if ($slot_tujuan["status"] == "tutup") {
+        kembali("error", "Slot tujuan sedang ditutup", $halaman_balik);
+    }
+    if ($terisi_tujuan >= $slot_tujuan["kuota"]) {
+        kembali("error", "Slot tujuan sudah penuh", $halaman_balik);
     }
 
     // Ubah status jadwal lama jadi 'dipindahkan'

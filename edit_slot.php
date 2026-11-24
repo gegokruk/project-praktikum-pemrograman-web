@@ -169,5 +169,6 @@ $pemilih = mysqli_query($connection, "SELECT pilihan_lembur.id_pilihan, users.na
             </div>
         </div>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>

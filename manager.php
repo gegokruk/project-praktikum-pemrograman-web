@@ -169,5 +169,6 @@ $slots = mysqli_query($connection, "SELECT * FROM slot_lembur ORDER BY tanggal, 
             </div>
         </div>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>

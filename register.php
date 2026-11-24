@@ -11,8 +11,8 @@ $error = "";
 $sukses = "";
 
 if (isset($_POST["register"])) {
-    $nama = $_POST["nama"];
-    $email = $_POST["email"];
+    $nama = mysqli_real_escape_string($connection, $_POST["nama"]);
+    $email = mysqli_real_escape_string($connection, $_POST["email"]);
     $password = $_POST["password"];
     $konfirmasi = $_POST["konfirmasi_password"];
 
@@ -89,5 +89,6 @@ if (isset($_POST["register"])) {
             </div>
         </div>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>

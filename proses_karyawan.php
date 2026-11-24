@@ -1,9 +1,10 @@
 <?php
 session_start();
 require "koneksi.php";
+require "penghubung.php";
 
 if (!isset($_SESSION["login"]) || $_SESSION["login"] !== true || $_SESSION["role"] !== "karyawan") {
-    header("Location: index.php");
+    header("Location: login.php");
     exit;
 }
 
@@ -46,8 +47,8 @@ if (isset($_POST["pilih"])) {
         kembali("error", "Slot sudah penuh");
     }
 
-    simpanPilihan($connection, $id_user, $id_slot);   
-    perbaruiStatusSlot($connection, $id_slot);         
+    simpanPilihan($connection, $id_user, $id_slot);
+    perbaruiStatusSlot($connection, $id_slot);
     kembali("success", "Slot lembur berhasil dipilih");
 }
 

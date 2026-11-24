@@ -16,7 +16,8 @@ if (isset($_COOKIE["remember_email"])){
 }
 
 if (isset($_POST["login"])) {
-    $email = $_POST["email"];
+    $email_asli = $_POST["email"];
+    $email = mysqli_real_escape_string($connection, $email_asli);
     $password = $_POST["password"];
 
     $query = mysqli_query($connection, "SELECT * FROM users WHERE email = '$email'");
@@ -33,7 +34,7 @@ if (isset($_POST["login"])) {
 
             // Remember Me (Cookie 7 hari)
             if (isset($_POST["remember"])) {
-                setcookie("remember_email", $email, time() + (86400 * 7), "/");
+                setcookie("remember_email", $email_asli, time() + (86400 * 7), "/");
             } else {
                 setcookie("remember_email", "", time() - 3600, "/");
             }
@@ -97,5 +98,6 @@ if (isset($_POST["login"])) {
             </div>
         </div>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>

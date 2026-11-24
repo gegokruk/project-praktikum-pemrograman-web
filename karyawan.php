@@ -3,7 +3,7 @@ session_start();
 require "koneksi.php";
 
 if (!isset($_SESSION["login"]) || $_SESSION["login"] !== true || $_SESSION["role"] !== "karyawan") {
-    header("Location: index.php");
+    header("Location: login.php");
     exit;
 }
 
@@ -85,7 +85,7 @@ $jadwal = mysqli_query($connection, "SELECT pilihan_lembur.id_pilihan, slot_lemb
                             $sudah_dipilih = in_array($row["id_slot"], $pilihan_saya);  
                             $ditutup = $row["status"] === "tutup";                      
                             $penuh = $row["terisi"] >= $row["kuota"];                  
-                            
+
                             if ($ditutup) {
                                 $warna_baris = "table-secondary";
                                 $warna_badge = "bg-secondary";
@@ -170,5 +170,6 @@ $jadwal = mysqli_query($connection, "SELECT pilihan_lembur.id_pilihan, slot_lemb
         </table>
         </div>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>
