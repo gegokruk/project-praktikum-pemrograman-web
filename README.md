@@ -39,16 +39,49 @@ Aplikasi web berbasis PHP dan MySQL untuk mengelola penjadwalan lembur karyawan 
 ## Struktur Folder dan File
 
 ```text
-project-pemweb-kel2/
-    ├── database.sql     # Skema 3 tabel + data awal
-    ├── koneksi.php      # Koneksi DB & session_start()
-    ├── login.php        # Login, cookie "Ingat Saya", redirect role
-    ├── register.php     # Daftar akun karyawan
-    ├── logout.php       # Hapus session & logout
-    ├── manager.php      # CRUD slot lembur (manager)
-    ├── edit_slot.php    # Edit slot & pindah jadwal karyawan
-    ├── karyawan.php     # Pilih & batal slot lembur (karyawan)
-    ├── README.md        # Dokumentasi proyek
-    └── assets/
-          ├── style.css  # Custom CSS & badge kuota
-          └── script.js  # Konfirmasi aksi & validasi jam
+project-praktikum-pemrograman-web/
+    ├── assets/
+    │   ├── img/                 # Aset gambar
+    │   ├── logo/                # Logo 
+    │   └── style.css            # CSS halaman utama
+    ├── docs/                    # Dokumen laporan
+    ├── database.sql             # Skema 3 tabel
+    ├── index.php                # Halaman utama
+    ├── koneksi.php              # Koneksi database MySQLi
+    ├── penghubung.php           # Kumpulan fungsi pembantu
+    ├── login.php                # Form autentikasi login 
+    ├── register.php             # Form registrasi akun karyawan baru
+    ├── logout.php               # Penghapusan session dan redirect
+    ├── manager.php              # [UI] Dashboard manager
+    ├── edit_slot.php            # [UI] Halaman edit slot & pindah jadwal karyawan
+    ├── proses_manager.php       # [Logika] Tambah, edit, hapus & pindah karyawan
+    ├── karyawan.php             # [UI] Dashboard karyawan
+    ├── proses_karyawan.php      # [Logika] Proses pemilihan dan pembatalan slot karyawan
+    ├── script.js                # Validasi dan interaksi JavaScript sisi klien
+    └── README.md                # Dokumentasi proyek
+```
+
+## Rancangan Basis Data (`db_lembur`)
+
+Aplikasi menggunakan tiga tabel utama yang saling berelasi:
+
+* `users` : Menyimpan data akun pengguna (`id_user`, `nama`, `email`, `password`, `role`, `created_at`).
+* `slot_lembur` : Menyimpan jadwal lembur yang dibuat oleh manager (`id_slot`, `tanggal`, `jam_mulai`, `jam_selesai`, `kuota`, `status`, `dibuat_oleh`, `created_at`).
+* `pilihan_lembur` : Menyimpan data transaksi pengambilan slot oleh karyawan (`id_pilihan`, `id_user`, `id_slot`, `status`, `created_at`).
+
+## Cara Menjalankan di Lokal
+
+1. Pastikan **Apache** dan **MySQL** sudah aktif (melalui XAMPP atau Laragon)
+2. Salin folder proyek ini ke dalam direktori `htdocs` (XAMPP) atau `www` (Laragon)
+3. Buka `http://localhost/phpmyadmin`, kemudian import file `database.sql` untuk membuat database `db_lembur` beserta data awalnya
+4. Pastikan pengaturan host, username, dan password pada `koneksi.php` sesuai dengan konfigurasi MySQL lokal (`localhost`, `root`, password kosong)
+5. Buka browser dan akses `http://localhost/project-praktikum-pemrograman-web/`
+
+## Akun Uji Coba (Default)
+
+| Peran (Role) | Email | Password |
+| :--- | :--- | :--- |
+| **Manager** | `manager@kantor.com` | `password` |
+| **Karyawan** | `budi@kantor.com` | `password` |
+| **Karyawan** | `siti@kantor.com` | `password` |
+| **Karyawan** | `andi@kantor.com` | `password` |
