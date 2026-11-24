@@ -1,0 +1,80 @@
+/* Pengaturan dasar halaman */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    color: #333333;
+}
+
+/* Bagian banner pembuka di atas */
+.banner-utama {
+    background-color: #1e293b;
+    color: #ffffff;
+    padding: 70px 0;
+}
+
+.banner-utama h1 {
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.banner-utama p {
+    font-size: 17px;
+    color: #cbd5e1;
+    max-width: 650px;
+}
+
+/* Jarak atas dan bawah tiap bagian (section) */
+.bagian-putih {
+    background-color: #ffffff;
+    padding: 60px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.bagian-abu {
+    background-color: #f1f5f9;
+    padding: 60px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+/* Pengaturan gambar kantor */
+.foto-kantor {
+    width: 100%;
+    max-width: 480px;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Efek saat kartu keunggulan disentuh kursor */
+.kartu-fitur {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    transition: 0.2s;
+}
+
+.kartu-fitur:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Lingkaran nomor pada bagian Cara Menggunakan */
+.lingkaran-angka {
+    width: 45px;
+    height: 45px;
+    line-height: 45px;
+    background-color: #0d3268;
+    color: #ffffff;
+    font-weight: bold;
+    border-radius: 50%;
+    margin: 0 auto 15px auto;
+}
+
+/* Bagian footer paling bawah */
+.footer-bawah {
+    background-color: #212529;
+    color: #ffffff;
+    text-align: center;
+    padding: 20px 0;
+    font-size: 14px;
+}
