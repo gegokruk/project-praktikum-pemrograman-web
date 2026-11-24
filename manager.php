@@ -7,52 +7,8 @@ if (!isset($_SESSION["login"]) || $_SESSION["login"] !== true || $_SESSION["role
     exit;
 }
 
-$id_manager = (int) $_SESSION["id_user"];
-
-// Proses tambah slot
-if (isset($_POST["tambah_slot"])) {
-    $tanggal     = mysqli_real_escape_string($connection, $_POST["tanggal"]);
-    $jam_mulai   = mysqli_real_escape_string($connection, $_POST["jam_mulai"]);
-    $jam_selesai = mysqli_real_escape_string($connection, $_POST["jam_selesai"]);
-    $kuota       = (int) $_POST["kuota"];
-
-    if ($jam_selesai <= $jam_mulai) {
-        $_SESSION["error"] = "Jam selesai harus lebih akhir dari jam mulai";
-    } elseif ($kuota < 1) {
-        $_SESSION["error"] = "Kuota karyawan minimal 1 orang";
-    } else {
-        $query = "INSERT INTO slot_lembur (tanggal, jam_mulai, jam_selesai, kuota, status, dibuat_oleh) 
-                    VALUES ('$tanggal', '$jam_mulai', '$jam_selesai', $kuota, 'buka', $id_manager)";
-        if (mysqli_query($connection, $query)) {
-            $_SESSION["success"] = "Slot jadwal lembur berhasil ditambahkan";
-        } else {
-            $_SESSION["error"] = "Gagal menambahkan slot: " . mysqli_error($connection);
-        }
-    }
-    header("Location: manager.php");
-    exit;
-}
-
-// Proses hapus slot
-if (isset($_POST["hapus_slot"])) {
-    $id_slot = (int) $_POST["id_slot"];
-    $query = "DELETE FROM slot_lembur WHERE id_slot = $id_slot";
-
-    if (mysqli_query($connection, $query)) {
-        $_SESSION["success"] = "Slot lembur berhasil dihapus";
-    } else {
-        $_SESSION["error"] = "Gagal menghapus slot: " . mysqli_error($connection);
-    }
-    header("Location: manager.php");
-    exit;
-}
-
-// Ambil semua data slot lembur beserta jumlah pemilih aktif
-$slots = mysqli_query($connection, "SELECT slot_lembur.*, 
-    (SELECT COUNT(*) FROM pilihan_lembur 
-        WHERE pilihan_lembur.id_slot = slot_lembur.id_slot AND pilihan_lembur.status = 'aktif') AS terisi 
-    FROM slot_lembur 
-    ORDER BY tanggal ASC, jam_mulai ASC");
+// mengambil semua data slot urut berdasarkan tanggal dan jam mulai
+$slots = mysqli_query($connection, "SELECT * FROM slot_lembur ORDER BY tanggal, jam_mulai");
 ?>
 
 <!DOCTYPE html>
@@ -88,30 +44,26 @@ $slots = mysqli_query($connection, "SELECT slot_lembur.*,
         <?php endif; ?>
 
         <div class="row g-4">
-            <!-- Form slot baru -->
-            <div class="col-lg-4">
+            <!-- Form untuk membuat slot lembur -->
+            <div class="col-md-4">
                 <div class="card shadow-sm">
-                    <div class="card-header bg-dark text-white">
-                        <h6 class="mb-0">Buat Slot Lembur Baru</h6>
-                    </div>
                     <div class="card-body">
-                        <form method="POST">
+                        <h5 class="mb-3">Buat Slot Lembur</h5>
+                        <form method="POST" action="proses_manager.php">
                             <div class="mb-3">
-                                <label class="form-label">Tanggal Lembur</label>
+                                <label class="form-label">Tanggal</label>
                                 <input type="date" name="tanggal" class="form-control" required>
                             </div>
-                            <div class="row mb-3">
-                                <div class="col">
-                                    <label class="form-label">Jam Mulai</label>
-                                    <input type="time" name="jam_mulai" class="form-control" required>
-                                </div>
-                                <div class="col">
-                                    <label class="form-label">Jam Selesai</label>
-                                    <input type="time" name="jam_selesai" class="form-control" required>
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label">Jam Mulai</label>
+                                <input type="time" name="jam_mulai" class="form-control" required>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Kuota Maksimal (Orang)</label>
+                                <label class="form-label">Jam Selesai</label>
+                                <input type="time" name="jam_selesai" class="form-control" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Kuota Karyawan</label>
                                 <input type="number" name="kuota" class="form-control" min="1" value="3" required>
                             </div>
                             <button type="submit" name="tambah_slot" class="btn btn-primary w-100">
@@ -122,8 +74,8 @@ $slots = mysqli_query($connection, "SELECT slot_lembur.*,
                 </div>
             </div>
 
-            <!-- Tabel daftar slot & kuota -->
-            <div class="col-lg-8">
+            <!-- menampilkan daftar slot lembur -->
+            <div class="col-md-8">
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <h5 class="mb-3">Daftar Slot Lembur</h5>
@@ -132,10 +84,11 @@ $slots = mysqli_query($connection, "SELECT slot_lembur.*,
                                 <thead class="table-dark">
                                     <tr>
                                         <th>No</th>
-                                        <th>Tanggal & Jam</th>
+                                        <th>Tanggal</th>
+                                        <th>Jam</th>
                                         <th>Kuota</th>
                                         <th>Status</th>
-                                        <th>Karyawan Terdaftar</th>
+                                        <th>Pemilih</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
@@ -143,70 +96,69 @@ $slots = mysqli_query($connection, "SELECT slot_lembur.*,
                                     <?php $no = 1; ?>
                                     <?php while ($row = mysqli_fetch_assoc($slots)): ?>
                                         <?php
-                                        $id_slot_ini = (int) $row["id_slot"];
-                                        $kelebihan   = $row["terisi"] > $row["kuota"];
-                                        $ditutup     = $row["status"] === "tutup";
+                                        $id_slot = $row["id_slot"];
 
-                                        if ($kelebihan) {
+                                        // Menghitung karyawan yang memilih slot
+                                        $q_hitung = mysqli_query($connection, "SELECT COUNT(*) AS jumlah FROM pilihan_lembur WHERE id_slot = $id_slot AND status = 'aktif'");
+                                        $data_hitung = mysqli_fetch_assoc($q_hitung);
+                                        $terisi = $data_hitung["jumlah"];
+
+                                        $kondisi = status($terisi, $row["kuota"]);
+                                        if ($terisi > $row["kuota"]) {
                                             $warna_baris = "table-danger";
                                             $warna_badge = "bg-danger";
-                                            $teks_status = "Kelebihan Kuota!";
-                                        } elseif ($ditutup) {
+                                            $teks_status = "Kelebihan Kuota";
+                                        } elseif ($row["status"] == "tutup") {
                                             $warna_baris = "table-secondary";
                                             $warna_badge = "bg-secondary";
                                             $teks_status = "Ditutup";
-                                        } elseif (status($row["terisi"], $row["kuota"]) === "penuh") {
+                                        } elseif ($kondisi == "penuh") {
                                             $warna_baris = "table-danger";
                                             $warna_badge = "bg-danger";
                                             $teks_status = "Penuh";
-                                        } elseif (status($row["terisi"], $row["kuota"]) === "hampir penuh") {
+                                        } elseif ($kondisi == "hampir penuh") {
                                             $warna_baris = "table-warning";
                                             $warna_badge = "bg-warning text-dark";
                                             $teks_status = "Hampir penuh";
                                         } else {
-                                            $warna_baris = "";
+                                            $warna_baris = "table-success";
                                             $warna_badge = "bg-success";
                                             $teks_status = "Tersedia";
-                                        }
-
-                                        // Ambil daftar nama karyawan yang aktif di slot ini
-                                        $q_pemilih = mysqli_query($connection, "SELECT users.nama FROM pilihan_lembur 
-                                            INNER JOIN users ON pilihan_lembur.id_user = users.id_user 
-                                            WHERE pilihan_lembur.id_slot = $id_slot_ini AND pilihan_lembur.status = 'aktif'");
-                                        $daftar_nama = [];
-                                        while ($p = mysqli_fetch_assoc($q_pemilih)) {
-                                            $daftar_nama[] = htmlspecialchars($p["nama"]);
                                         }
                                         ?>
                                         <tr class="<?= $warna_baris ?>">
                                             <td><?= $no++ ?></td>
-                                            <td>
-                                                <strong><?= $row["tanggal"] ?></strong><br>
-                                                <small class="text-muted"><?= substr($row["jam_mulai"], 0, 5) ?> - <?= substr($row["jam_selesai"], 0, 5) ?></small>
-                                            </td>
-                                            <td><?= $row["terisi"] ?> / <?= $row["kuota"] ?></td>
+                                            <td><?= $row["tanggal"] ?></td>
+                                            <td><?= substr($row["jam_mulai"], 0, 5) ?> - <?= substr($row["jam_selesai"], 0, 5) ?></td>
+                                            <td><?= $terisi ?> / <?= $row["kuota"] ?></td>
                                             <td><span class="badge <?= $warna_badge ?>"><?= $teks_status ?></span></td>
                                             <td>
-                                                <?php if (count($daftar_nama) > 0): ?>
-                                                    <small><?= implode(", ", $daftar_nama) ?></small>
-                                                <?php else: ?>
-                                                    <small class="text-muted">Belum ada</small>
-                                                <?php endif; ?>
+                                                <?php
+                                                // Ambil nama karyawan yang aktif di slot ini
+                                                $q_pemilih = mysqli_query($connection, "SELECT users.nama FROM pilihan_lembur, users WHERE pilihan_lembur.id_user = users.id_user AND pilihan_lembur.id_slot = $id_slot AND pilihan_lembur.status = 'aktif'");
+
+                                                if (mysqli_num_rows($q_pemilih) > 0) {
+                                                    while ($p = mysqli_fetch_assoc($q_pemilih)) {
+                                                        echo "- " . htmlspecialchars($p["nama"]) . "<br>";
+                                                    }
+                                                } else {
+                                                    echo "Belum ada";
+                                                }
+                                                ?>
                                             </td>
                                             <td>
-                                                <div class="d-flex gap-1">
-                                                    <a href="edit_slot.php?id=<?= $row["id_slot"] ?>" class="btn btn-warning btn-sm">Edit</a>
-                                                    <form method="POST" onsubmit="return confirm('Yakin ingin menghapus slot ini?')">
-                                                        <input type="hidden" name="id_slot" value="<?= $row["id_slot"] ?>">
-                                                        <button type="submit" name="hapus_slot" class="btn btn-danger btn-sm">Hapus</button>
-                                                    </form>
-                                                </div>
+                                                <a href="edit_slot.php?id=<?= $row["id_slot"] ?>" class="btn btn-warning btn-sm mb-1">Edit</a>
+                                                <form method="POST" action="proses_manager.php" onsubmit="return confirm('Hapus slot lembur ini?')">
+                                                    <input type="hidden" name="id_slot" value="<?= $row["id_slot"] ?>">
+                                                    <button type="submit" name="hapus_slot" class="btn btn-danger btn-sm">Hapus</button>
+                                                </form>
                                             </td>
                                         </tr>
                                     <?php endwhile; ?>
-                                    <?php if ($no === 1): ?>
+
+                                    <?php if ($no == 1): ?>
                                         <tr>
-                                            <td colspan="6" class="text-center text-muted">Belum ada slot lembur yang dibuat.</td>
+                                            <td colspan="7" class="text-center">Belum ada slot lembur yang dibuat</td>
                                         </tr>
                                     <?php endif; ?>
                                 </tbody>
