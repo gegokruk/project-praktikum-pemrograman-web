@@ -4,9 +4,9 @@
 &nbsp;&nbsp;&nbsp;
 <img src="assets/logo/LOGO_IF.png" alt="Logo Informatika" height="48" />
 &nbsp;&nbsp;&nbsp;
-<img src="assets/logo/LOGO_HIMA.png" alt="Logo Informatika" height="50" />
+<img src="assets/logo/LOGO_HIMA.png" alt="Logo HIMA Informatika" height="50" />
 
-# Sistem Manajemen Lembur & Fleksibilitas Jam Kerja
+# Sistem Manajemen Lembur & Fleksibilitas Jam Kerja (SiLembur)
 
 ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
 ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
@@ -15,9 +15,14 @@
 ![PHP](https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 
+**Proyek Akhir Praktikum Pemrograman Web — Kelompok 2 (IF-F)**  
+Program Studi Informatika, UPN "Veteran" Yogyakarta
+
+**Live Demo:** [https://silembur-pemweb.gegokruk.my.id](https://silembur-pemweb.gegokruk.my.id)
+
 </div>
 
-Proyek Praktikum Pemrograman Web - Kelompok 2
+
 
 ## Anggota Kelompok
 
